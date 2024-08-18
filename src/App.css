@@ -1,0 +1,52 @@
+.container {
+  padding: 20px;
+  border-radius: 5px; /* Optional: for rounded corners */
+}
+.table-container {
+box-sizing: border-box;
+border: 1px solid #3F3F46;
+}
+
+.border-end {
+  border-right: 1px solid #3F3F46 !important;
+}
+.text-muted {
+  color: #b3b3b3 !important;
+}
+
+.heading{
+font-family: 'Inter';
+font-style: normal;
+font-weight: 600;
+font-size: 24px;
+line-height: 32px;
+display: flex;
+align-items: center;
+color: #FFFFFF;
+}
+
+
+.number{
+  font-family: 'Inter';
+font-style: normal;
+font-weight: 500;
+font-size: 32px;
+line-height: 40px;
+letter-spacing: -0.8px;
+color: #F4F4F5;
+}
+
+.connected-chains{
+padding: 7px 10px;
+background: #27272A;
+border-radius: 12px;
+}
+
+.text{
+font-family: 'Inter';
+font-style: normal;
+font-weight: 500;
+font-size: 14px;
+line-height: 24px;
+color: #71717A;
+}
