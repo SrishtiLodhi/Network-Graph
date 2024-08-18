@@ -1,7 +1,6 @@
-import React, { useCallback, useRef, useEffect } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { ForceGraph2D } from 'react-force-graph';
-import * as d3Force from 'd3-force';
-import * as d3Zoom from 'd3-zoom';
+import * as d3 from 'd3-force';
 
 const NetworkGraph = () => {
   const fgRef = useRef();
@@ -85,13 +84,13 @@ const NetworkGraph = () => {
       .map(id => ({ source: 'Axelar', target: id }))
   };
 
+  // The rest of the component remains the same as in the previous example
+  
   const nodeCanvasObject = useCallback((node, ctx, globalScale) => {
     const image = new Image();
     const size = 20;
     image.src = nodeImages[node.id];
-    image.onload = () => {
-      ctx.drawImage(image, node.x - size / 2, node.y - size / 2, size, size);
-    };
+    ctx.drawImage(image, node.x - size / 2, node.y - size / 2, size, size);
 
     const label = node.id;
     const fontSize = 4;
@@ -106,46 +105,29 @@ const NetworkGraph = () => {
     fgRef.current.zoomToFit(400);
   }, []);
 
-  useEffect(() => {
-    const graph = fgRef.current;
-
-    if (graph) {
-      // Use D3 Zoom behavior
-      const zoomBehavior = d3Zoom.zoom()
-        .scaleExtent([1, 8]) // Adjust zoom scale as needed
-        .on('zoom', (event) => {
-          graph.zoom(event.transform.k);
-          graph.translateTo(event.transform.x, event.transform.y);
-        });
-
-      // Attach zoom behavior to the canvas element
-      const canvas = graph.renderer().domElement;
-      d3Zoom.select(canvas).call(zoomBehavior);
-    }
-  }, [fgRef]);
-
   return (
     <div style={{ width: '100%', height: '100vh' }}>
       <ForceGraph2D
-        width={window.innerWidth}  // This ensures the graph takes up the full width
-        height={window.innerHeight}
+      width={window.innerWidth}  // This ensures the graph takes up the full width
+      height={window.innerHeight}
         ref={fgRef}
         graphData={data}
         nodeCanvasObject={nodeCanvasObject}
-        nodePointerAreaPaint={() => {}} // Disable pointer area painting
+        nodePointerAreaPaint={(node, color, ctx) => {
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, 5, 0, 2 * Math.PI, false);
+          ctx.fill();
+        }}
         linkColor={() => 'rgba(255,255,255,0.2)'}
         linkWidth={0.5}
         d3Force={(engine) => {
           engine
-            .force('charge', d3Force.forceManyBody().strength(-200))
-            .force('center', d3Force.forceCenter())
-            .force('link', d3Force.forceLink().id(d => d.id).distance(150));
+            .force('charge', d3.forceManyBody().strength(-200))
+            .force('center', d3.forceCenter())
+            .force('link', d3.forceLink().id(d => d.id).distance(150));
         }}
         onEngineStop={handleEngineStop}
-        onNodeClick={() => {}} // Disable node click functionality
-        onLinkClick={() => {}} // Disable link click functionality
-        onNodeHover={() => {}} // Disable node hover functionality
-        onLinkHover={() => {}} // Disable link hover functionality
       />
     </div>
   );

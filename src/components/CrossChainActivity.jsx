@@ -13,7 +13,7 @@ const CrossChainActivity = () => {
         </div>
       </div>
       <div className="table-container row text-white p-3 rounded pt-0 pb-0">
-        <div className="col-md-3 border-end p-lg-4 p-md-2">
+        <div className="col-md-3 border-last p-lg-4 p-md-2">
         <p className="mb-2 text">Transactions</p>
           <h4 className="mb-2 number">2,328,766</h4>
           <div className='mb-1 d-flex justify-content-between align-items-center'>
@@ -21,7 +21,7 @@ const CrossChainActivity = () => {
           <p className='text'>Transfer: 587.52K</p>
           </div>
         </div>
-        <div className="col-md-3 border-end p-lg-4 p-md-2">
+        <div className="col-md-3 border-last p-lg-4 p-md-2">
         <p className="mb-2 text">Volume</p>
           <h4 className="mb-2 number">$9,503,741,757</h4>
           <div className='mb-1 d-flex justify-content-between align-items-center'>
@@ -29,7 +29,7 @@ const CrossChainActivity = () => {
           <p className='text'>Transfer: $6.85B</p>
           </div>
         </div>
-        <div className="col-md-3 border-end p-lg-4 p-md-2">
+        <div className="col-md-3 border-last p-lg-4 p-md-2">
         <p className="mb-2 text">Average Volume / Transaction</p>
           <h4 className="mb-2 number">$4,081</h4>
           <div className='mb-1 d-flex justify-content-between align-items-center'>

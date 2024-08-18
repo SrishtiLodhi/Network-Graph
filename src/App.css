@@ -7,7 +7,7 @@ box-sizing: border-box;
 border: 1px solid #3F3F46;
 }
 
-.border-end {
+.border-last {
   border-right: 1px solid #3F3F46 !important;
 }
 .text-muted {
