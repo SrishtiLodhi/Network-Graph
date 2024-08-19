@@ -5,19 +5,21 @@ import * as d3 from "d3-force";
 const NetworkGraph = () => {
   const fgRef = useRef();
   const [loading, setLoading] = useState(true);
+  const [selectedNode, setSelectedNode] = useState(null); // State to track the clicked (selected) node
 
   const nodeImages = {
+    // Define your node images here as before
     Axelar: require("../assets/b.svg").default,
     Ethereum: require("../assets/eth-logo.svg").default,
     "BNB Chain": require("../assets/logo2.svg").default,
     Polygon: require("../assets/matic-logo.svg").default,
-    Avalanche: require("../assets/bitcoin1.png").default,
-    Fantom: require("../assets/logo.png").default,
+    Avalanche: require("../assets/avalanche.svg").default,
+    Fantom: require("../assets/fantom.svg").default,
     Terra: "path_to_terra_logo.png",
     Osmosis: "path_to_osmosis_logo.png",
     Cosmos: "path_to_cosmos_logo.png",
     Arbitrum: "path_to_arbitrum_logo.png",
-    Optimism: "path_to_optimism_logo.png",
+    Optimism: require("../assets/optimism.svg").default,
     Kava: "path_to_kava_logo.png",
     Celo: "path_to_celo_logo.png",
     Moonbeam: "path_to_moonbeam_logo.png",
@@ -34,7 +36,7 @@ const NetworkGraph = () => {
     Aptos: "path_to_aptos_logo.png",
     Filecoin: "path_to_filecoin_logo.png",
     Algorand: "path_to_algorand_logo.png",
-    Base: "path_to_base_logo.png",
+    Base: require("../assets/base-logo.svg").default,
     Mantle: "path_to_mantle_logo.png",
     Linea: "path_to_linea_logo.png",
     Saga: "path_to_saga_logo.png",
@@ -85,24 +87,43 @@ const NetworkGraph = () => {
       .map((id) => ({ source: "Axelar", target: id })),
   };
 
-  const nodeCanvasObject = useCallback((node, ctx, globalScale) => {
-    const image = new Image();
-    const size = 10;
-    image.src = nodeImages[node.id];
-    ctx.drawImage(image, node.x - size / 2, node.y - size / 2, size, size);
+  const nodeCanvasObject = useCallback(
+    (node, ctx, globalScale) => {
+      const size = 10;
 
-    const label = node.id;
-    const fontSize = 2;
-    ctx.font = `${fontSize}px Sans-Serif`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillStyle = "white";
-    ctx.fillText(label, node.x, node.y + size / 2 + fontSize);
-  }, []);
+      // Draw the border for the selected node
+      if (node === selectedNode) {
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, size / 2 + 3, 0, 2 * Math.PI, false); // Adjust the radius for the border
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
+      // Draw the node image
+      const image = new Image();
+      image.src = nodeImages[node.id];
+      ctx.drawImage(image, node.x - size / 2, node.y - size / 2, size, size);
+
+      // Draw the node label
+      const label = node.id;
+      const fontSize = 2.5;
+      ctx.font = `${fontSize}px Sans-Serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "white";
+      ctx.fillText(label, node.x, node.y + size / 2 + fontSize);
+    },
+    [selectedNode, nodeImages]
+  );
+
+  const handleNodeClick = (node) => {
+    setSelectedNode(node); // Update the selected node state
+  };
 
   const handleEngineStop = useCallback(() => {
     fgRef.current.zoomToFit(400, 50);
-    setLoading(false); 
+    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -128,48 +149,75 @@ const NetworkGraph = () => {
     loadImages();
   }, [nodeImages]);
 
+  const linkColor = (link) => {
+    // Change link color to white if it connects to the selected node
+    if (
+      selectedNode &&
+      (link.source.id === selectedNode.id || link.target.id === selectedNode.id)
+    ) {
+      return "white";
+    }
+    return "rgba(255,255,255,0.2)";
+  };
+
+  const getRandomColor = () => {
+    const colors = [
+      "#ff5733",
+      "#33ff57",
+      "#5733ff",
+      "#ff33a5",
+      "#33a5ff",
+      "#a533ff",
+    ];
+    return colors[Math.floor(Math.random() * colors.length)];
+  };
+
   return (
     <div className="d-flex justify-content-between">
-    <div className="mb-5">
-      <h3 className="text-white heading mt-5">Network Graph</h3>
-      {loading ? (
-        <div className="loader">
-          <p>Loading...</p>
-        </div>
-      ) : (
-        <ForceGraph2D
-          width={648}
-          height={632}
-          ref={fgRef}
-          graphData={data}
-          nodeCanvasObject={nodeCanvasObject}
-          nodePointerAreaPaint={(node, color, ctx) => {
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.arc(node.x, node.y, 5, 0, 2 * Math.PI, false);
-            ctx.fill();
-          }}
-          linkColor={() => "rgba(255,255,255,0.2)"}
-          linkWidth={0.5}
-          d3Force={(engine) => {
-            engine
-              .force("charge", d3.forceManyBody().strength(-200))
-              .force("center", d3.forceCenter())
-              .force(
-                "link",
-                d3
-                  .forceLink()
-                  .id((d) => d.id)
-                  .distance(150)
-              )
-              .alphaDecay(0.05);
-          }}
-          onEngineStop={handleEngineStop}
-          enableZoomInteraction={false} // Disable zooming interaction
-        />
-      )}
+      <div className="mb-5">
+        <h3 className="text-white heading mt-5">Network Graph</h3>
+        {loading ? (
+          <div className="loader">
+            <p>Loading...</p>
+          </div>
+        ) : (
+          <ForceGraph2D
+            width={648}
+            height={632}
+            ref={fgRef}
+            graphData={data}
+            nodeCanvasObject={nodeCanvasObject}
+            nodePointerAreaPaint={(node, color, ctx) => {
+              ctx.fillStyle = color;
+              ctx.beginPath();
+              ctx.arc(node.x, node.y, 5, 0, 2 * Math.PI, false);
+              ctx.fill();
+            }}
+            linkColor={linkColor}
+            linkWidth={0.5}
+            d3Force={(engine) => {
+              engine
+                .force("charge", d3.forceManyBody().strength(-200))
+                .force("center", d3.forceCenter())
+                .force(
+                  "link",
+                  d3
+                    .forceLink()
+                    .id((d) => d.id)
+                    .distance(100)
+                );
+            }}
+            enableZoomInteraction={false}
+            onNodeClick={handleNodeClick}
+            onEngineStop={handleEngineStop}
+            linkDirectionalParticles={2} // Number of particles on each link
+            linkDirectionalParticleSpeed={() => Math.random() * 0.02 + 0.005} // Speed of the particles
+            linkDirectionalParticleWidth={0.8} // Width of the particles
+            linkDirectionalParticleColor={getRandomColor}
+          />
+        )}
+      </div>
     </div>
-  </div>
   );
 };
 
