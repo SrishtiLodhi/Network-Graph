@@ -1,14 +1,17 @@
 import React, { useCallback, useRef, useState, useEffect } from "react";
 import { ForceGraph2D } from "react-force-graph";
 import * as d3 from "d3-force";
+import { ColorRing } from "react-loader-spinner";
 
 const NetworkGraph = () => {
   const fgRef = useRef();
+  const containerRef = useRef();
   const [loading, setLoading] = useState(true);
   const [selectedNode, setSelectedNode] = useState(null); // State to track the clicked (selected) node
+  const [zIndex, setZIndex] = useState(1); // Default z-index
 
   const nodeImages = {
-    // Define your node images here as before
+    // Define your node images here
     Axelar: require("../assets/b.svg").default,
     Ethereum: require("../assets/eth-logo.svg").default,
     "BNB Chain": require("../assets/logo2.svg").default,
@@ -94,7 +97,7 @@ const NetworkGraph = () => {
       // Draw the border for the selected node
       if (node === selectedNode) {
         ctx.beginPath();
-        ctx.arc(node.x, node.y, size / 2 + 3, 0, 2 * Math.PI, false); // Adjust the radius for the border
+        ctx.arc(node.x, node.y, size / 2 + 3, 0, 2 * Math.PI, false);
         ctx.strokeStyle = "white";
         ctx.lineWidth = 2;
         ctx.stroke();
@@ -123,7 +126,6 @@ const NetworkGraph = () => {
 
   const handleEngineStop = useCallback(() => {
     fgRef.current.zoomToFit(400, 50);
-    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -139,15 +141,31 @@ const NetworkGraph = () => {
         });
 
         await Promise.all(imagePromises);
-        setLoading(false); // Set loading to false after all images are loaded
       } catch (error) {
         console.error("Error loading images:", error);
-        setLoading(false);
       }
     };
 
     loadImages();
   }, [nodeImages]);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      // Set z-index to -1 to hide the graph
+      setZIndex(-1);
+
+      // Restore z-index after 10 seconds
+      const timer = setTimeout(() => {
+        setZIndex(1); // Restore z-index
+      }, 16000);
+
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const loaderTimeout = setTimeout(() => {
+    setLoading(false); // Hide the loader after 20 seconds
+  }, 16000); // 20 seconds
 
   const linkColor = (link) => {
     // Change link color to white if it connects to the selected node
@@ -174,48 +192,60 @@ const NetworkGraph = () => {
 
   return (
     <div className="d-flex justify-content-between">
-      <div className="mb-5">
-        <h3 className="text-white heading mt-5">Network Graph</h3>
-        {loading ? (
-          <div className="loader">
-            <p>Loading...</p>
-          </div>
-        ) : (
-          <ForceGraph2D
-            width={648}
-            height={632}
-            ref={fgRef}
-            graphData={data}
-            nodeCanvasObject={nodeCanvasObject}
-            nodePointerAreaPaint={(node, color, ctx) => {
-              ctx.fillStyle = color;
-              ctx.beginPath();
-              ctx.arc(node.x, node.y, 5, 0, 2 * Math.PI, false);
-              ctx.fill();
-            }}
-            linkColor={linkColor}
-            linkWidth={0.5}
-            d3Force={(engine) => {
-              engine
-                .force("charge", d3.forceManyBody().strength(-200))
-                .force("center", d3.forceCenter())
-                .force(
-                  "link",
-                  d3
-                    .forceLink()
-                    .id((d) => d.id)
-                    .distance(100)
-                );
-            }}
-            enableZoomInteraction={false}
-            onNodeClick={handleNodeClick}
-            onEngineStop={handleEngineStop}
-            linkDirectionalParticles={2} // Number of particles on each link
-            linkDirectionalParticleSpeed={() => Math.random() * 0.02 + 0.005} // Speed of the particles
-            linkDirectionalParticleWidth={0.8} // Width of the particles
-            linkDirectionalParticleColor={getRandomColor}
+      {loading && (
+        <div className="loader-container vh-75">
+          <ColorRing
+            visible={true}
+            height="80"
+            width="80"
+            ariaLabel="blocks-loading"
+            wrapperStyle={{}}
+            wrapperClass="blocks-wrapper"
+            colors={["#e15b64", "#f47e60", "#f8b26a", "#abbd81", "#849b87"]}
           />
-        )}
+          ;
+        </div>
+      )}
+      <div
+        className="mb-5"
+        ref={containerRef}
+        style={{ position: "relative", zIndex }}
+      >
+        <h3 className="text-white heading mt-5">Network Graph</h3>
+        <ForceGraph2D
+          width={648}
+          height={632}
+          ref={fgRef}
+          graphData={data}
+          nodeCanvasObject={nodeCanvasObject}
+          nodePointerAreaPaint={(node, color, ctx) => {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, 5, 0, 2 * Math.PI, false);
+            ctx.fill();
+          }}
+          linkColor={linkColor}
+          linkWidth={0.5}
+          d3Force={(engine) => {
+            engine
+              .force("charge", d3.forceManyBody().strength(-200))
+              .force("center", d3.forceCenter())
+              .force(
+                "link",
+                d3
+                  .forceLink()
+                  .id((d) => d.id)
+                  .distance(100)
+              );
+          }}
+          enableZoomInteraction={false}
+          onNodeClick={handleNodeClick}
+          onEngineStop={handleEngineStop}
+          linkDirectionalParticles={2} // Number of particles on each link
+          linkDirectionalParticleSpeed={() => Math.random() * 0.02 + 0.005} // Speed of the particles
+          linkDirectionalParticleWidth={0.8} // Width of the particles
+          linkDirectionalParticleColor={getRandomColor}
+        />
       </div>
     </div>
   );
